@@ -47,4 +47,3 @@ def download_model():
 
 if __name__ == "__main__":
     build_vector_store()
-    download_model()
