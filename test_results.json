@@ -1,0 +1,120 @@
+{
+  "total": 10,
+  "passed": 6,
+  "failed": 4,
+  "errors": 0,
+  "details": [
+    {
+      "test": 1,
+      "description": "Selling personal info without opt-out (Sec 1798.120)",
+      "status": "PASS",
+      "response": {
+        "harmful": true,
+        "articles": [
+          "Section 1798.100"
+        ]
+      }
+    },
+    {
+      "test": 2,
+      "description": "Undisclosed data collection (Sec 1798.100)",
+      "status": "PASS",
+      "response": {
+        "harmful": true,
+        "articles": [
+          "Section 1798.100"
+        ]
+      }
+    },
+    {
+      "test": 3,
+      "description": "Ignoring deletion request (Sec 1798.105)",
+      "status": "PASS",
+      "response": {
+        "harmful": true,
+        "articles": [
+          "Section 1798.100"
+        ]
+      }
+    },
+    {
+      "test": 4,
+      "description": "Discriminatory pricing for opt-out (Sec 1798.125)",
+      "status": "PASS",
+      "response": {
+        "harmful": true,
+        "articles": [
+          "Section 1798.100"
+        ]
+      }
+    },
+    {
+      "test": 5,
+      "description": "Minor's data without consent (Sec 1798.120)",
+      "status": "PASS",
+      "response": {
+        "harmful": true,
+        "articles": [
+          "Section 1798.100"
+        ]
+      }
+    },
+    {
+      "test": 6,
+      "description": "CCPA-compliant data practices",
+      "status": "FAIL",
+      "response": {
+        "harmful": true,
+        "articles": [
+          "Section 1798.100"
+        ]
+      },
+      "reason": "Expected harmful=False, got harmful=True"
+    },
+    {
+      "test": 7,
+      "description": "Proper deletion compliance",
+      "status": "FAIL",
+      "response": {
+        "harmful": true,
+        "articles": [
+          "Section 1798.100"
+        ]
+      },
+      "reason": "Expected harmful=False, got harmful=True"
+    },
+    {
+      "test": 8,
+      "description": "Normal meeting request (unrelated to CCPA)",
+      "status": "FAIL",
+      "response": {
+        "harmful": true,
+        "articles": [
+          "Section 1798.100"
+        ]
+      },
+      "reason": "Expected harmful=False, got harmful=True"
+    },
+    {
+      "test": 9,
+      "description": "Proper opt-out link (compliant)",
+      "status": "PASS",
+      "response": {
+        "harmful": false,
+        "articles": []
+      }
+    },
+    {
+      "test": 10,
+      "description": "Non-discriminatory practices (compliant)",
+      "status": "FAIL",
+      "response": {
+        "harmful": true,
+        "articles": [
+          "Section 1798.100"
+        ]
+      },
+      "reason": "Expected harmful=False, got harmful=True"
+    }
+  ]
+}
