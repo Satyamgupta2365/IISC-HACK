@@ -178,7 +178,3 @@ langchain      langchain-community
 
 
 <img width="1918" height="1014" alt="Screenshot 2026-03-02 204120" src="https://github.com/user-attachments/assets/987c9e8c-4b59-4a63-972a-2ffaafdc10b7" />
-
-<img width="1919" height="1021" alt="Screenshot 2026-03-02 211011" src="https://github.com/user-attachments/assets/e888be2d-9f31-4c71-a99c-755893a6239a" />
-
-
