@@ -1,86 +1,178 @@
-# CCPA Compliance Detector
+# 📄 CCPA Compliance Analyzer
 
-## Architecture
-This project is an AI system built to detect California Consumer Privacy Act (CCPA) violations from business practice descriptions. 
-The architecture utilizes a Retrieval-Augmented Generation (RAG) approach:
-1. **Document Embedding**: The `ccpa_statute.pdf` is chunked and embedded using the sentence-transformers (`all-MiniLM-L6-v2`) via Langchain and saved to a local FAISS vector store. 
-2. **Retrieval**: When a request comes in, the specific query is embedded and the top-k most similar excerpts from the CCPA text are retrieved.
-3. **Generative Inference**: The user prompt and the retrieved context are passed to a Large Language Model (`Mistral-7B-Instruct-v0.2` by default) via HuggingFace's transformers pipeline to analyze and determine if the practice is harmful (violates the CCPA) and return the corresponding articles as completely valid JSON.
-4. **FastAPI**: The system is packaged into a containerized FastAPI server listening on Port 8000. All weights are downloaded statically at Docker build time.
+> AI-powered API to analyze privacy policies for **California Consumer Privacy Act (CCPA)** compliance.
 
-## Local Setup (Without Docker)
-1. Install requirements:
-   ```bash
-   pip install -r requirements.txt
-   ```
-2. Build the FAISS Vector Database and download model weights (will download to Hugging Face cache):
-   ```bash
-   python build_kb.py
-   ```
-3. Run the FastAPI Application locally:
-   ```bash
-   uvicorn app.main:app --host 0.0.0.0 --port 8000
-   ```
+Accepts a privacy policy (PDF or plain text), runs semantic analysis, and returns structured JSON results with compliance status, evidence, and confidence scores.
 
-## Docker Setup & Build
-To build the Docker image (replace `<your-token>` and `<your-dockerhub-username>`):
+---
+
+## 🧠 How It Works
+
+| Stage | Description |
+|---|---|
+| **Text Extraction** | Extracts text from uploaded PDF or text files |
+| **Chunking & Embedding** | Splits text into segments and generates vector embeddings via sentence-transformers |
+| **Semantic Search** | Uses a FAISS vector store to retrieve the most relevant policy segments per requirement |
+| **Classification** | A transformer model evaluates each CCPA requirement against retrieved segments |
+| **Structured Output** | Returns compliance status, evidence, confidence score, and explanation per requirement |
+
+### Architecture
+```
+Client (File Upload)
+       │
+       ▼
+ FastAPI Server
+       │
+       ▼
+Text Extraction → Chunking → Embeddings
+       │
+       ▼
+ FAISS Semantic Search
+       │
+       ▼
+Model-Based Compliance Evaluation
+       │
+       ▼
+    JSON Response
+```
+
+---
+
+## 🐳 Docker Setup (Recommended)
+
+### Pull the Image
 ```bash
-docker build --build-arg HF_TOKEN=<your-token> -t <your-dockerhub-username>/ccpa-compliance:latest .
+docker pull satyampy/iischack:latest
 ```
-_Note: The inference model weights and vector store embeddings are packaged immediately during the Docker build process to ensure maximum runtime speed and no delayed initialization._
 
-To push to Docker Hub:
+### Run with GPU (Recommended)
 ```bash
-docker push <your-dockerhub-username>/ccpa-compliance:latest
+docker run --gpus all \
+  -p 8000:8000 \
+  -e HF_TOKEN=<your_hf_token> \
+  satyampy/iischack:latest
 ```
 
-## Docker Run Command
-The service requires an NVIDIA GPU to run the LLM inference within the 120-second timeout constraints. Example run command:
+### Run on CPU (Fallback)
 ```bash
-docker run --gpus all -p 8000:8000 -e HF_TOKEN=<your-token> <your-dockerhub-username>/ccpa-compliance:latest
+docker run \
+  -p 8000:8000 \
+  -e HF_TOKEN=<your_hf_token> \
+  -e DEVICE=cpu \
+  satyampy/iischack:latest
 ```
-_Wait until the uvicorn worker successfully completes loading the LLM instance._
 
-## Environment Variables & GPU Requirements
-- `HF_TOKEN`: Needed to authenticate gated model downloads. Must be passed at Build Time `build-arg` and at Runtime via `-e`.
-- `MODEL_ID`: Defaults to `mistralai/Mistral-7B-Instruct-v0.2`. Change to a smaller Llama-3 parameter model if necessary.
-- **GPU Requirement:** Minimum 16GB VRAM (e.g. Nvidia T4, A10G) configured with nvidia-container-toolkit (`--gpus all`) due to loading a 7B float16 LLM.
+### Environment Variables
 
-## API Examples
+| Variable | Required | Default | Description |
+|---|---|---|---|
+| `HF_TOKEN` | ✅ Yes | — | Hugging Face token to download gated models |
+| `DEVICE` | No | `cuda` | Inference device: `cuda` or `cpu` |
+| `MODEL_NAME` | No | built-in | Override the default transformer model |
+| `EMBED_MODEL` | No | built-in | Override the default sentence-transformer model |
 
-### 1. Health Check
+> **GPU Recommendation:** At least 8GB VRAM. CPU-only mode is supported but will be slower.
+
+---
+
+## 🛠 Local Setup (Without Docker)
+
+> ⚠️ Only use this if Docker is unavailable.
 ```bash
-curl -X GET "http://localhost:8000/health"
-```
-**Response:**
-```json
-{"status": "ok"}
+# 1. Clone the repository
+git clone https://github.com/yourusername/iischack.git
+cd iischack
+
+# 2. Create and activate a virtual environment
+python3.10 -m venv venv
+source venv/bin/activate
+
+# 3. Install dependencies
+pip install --upgrade pip
+pip install -r requirements.txt
+
+# 4. Set environment variables
+export HF_TOKEN=<your_hf_token>
+export DEVICE=cuda   # or cpu
+
+# 5. Start the server
+uvicorn app:app --host 0.0.0.0 --port 8000
 ```
 
-### 2. Analyze Endpoint - Harmful Request
+Visit the interactive API docs at `http://localhost:8000/docs`
+
+---
+
+## 📡 API Reference
+
+### `GET /health`
 ```bash
-curl -X POST "http://localhost:8000/analyze" \
-     -H "Content-Type: application/json" \
-     -d '{"prompt": "We charge customers who opted out of data selling a higher price for the same service."}'
+curl -X GET http://localhost:8000/health
 ```
-**Response:**
 ```json
 {
-  "harmful": true,
-  "articles": ["Section 1798.125"]
+  "status": "ok",
+  "model_loaded": true,
+  "device": "cuda"
 }
 ```
 
-### 3. Analyze Endpoint - Non-Harmful Request
+---
+
+### `POST /analyze`
+
+Upload a privacy policy file for CCPA compliance analysis.
 ```bash
-curl -X POST "http://localhost:8000/analyze" \
-     -H "Content-Type: application/json" \
-     -d '{"prompt": "We securely delete user data upon proper verified request within maximum 45 days."}'
+curl -X POST http://localhost:8000/analyze \
+  -H "Content-Type: multipart/form-data" \
+  -F "file=@privacy_policy.pdf"
 ```
-**Response:**
 ```json
 {
-  "harmful": false,
-  "articles": []
+  "document_name": "privacy_policy.pdf",
+  "overall_compliance": "Partially Compliant",
+  "results": [
+    {
+      "requirement": "Right to Know",
+      "status": "Compliant",
+      "confidence": 0.92,
+      "evidence": "Consumers have the right to request disclosure...",
+      "explanation": "The document clearly defines consumer disclosure rights."
+    },
+    {
+      "requirement": "Right to Delete",
+      "status": "Non-Compliant",
+      "confidence": 0.85,
+      "evidence": "",
+      "explanation": "No deletion mechanism was found."
+    }
+  ]
 }
 ```
+
+---
+
+## 📦 Dependencies
+```
+fastapi        uvicorn         pydantic
+PyPDF2         sentence-transformers    faiss-cpu
+torch          transformers    huggingface-hub
+langchain      langchain-community
+```
+
+---
+
+## 🔐 Hugging Face Token
+
+- Generate a **read-only** token at [huggingface.co/settings/tokens](https://huggingface.co/settings/tokens)
+- Pass it via the `HF_TOKEN` environment variable
+- ⚠️ **Never** hardcode your token in source code or committed files
+
+---
+
+## ✅ Design Notes
+
+- **Modular** — swap or upgrade models via environment variables, no code changes needed
+- **Scalable** — FAISS enables fast semantic search on large documents
+- **Pipeline-ready** — designed to integrate into broader privacy automation workflows
+
