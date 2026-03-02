@@ -1,0 +1,10 @@
+__pycache__/
+*.pyc
+*.pyo
+faiss_index/
+test_results.json
+.env
+*.egg-info/
+dist/
+build/
+submission.zip

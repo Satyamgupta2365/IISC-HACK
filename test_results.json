@@ -1,7 +1,7 @@
 {
   "total": 10,
-  "passed": 6,
-  "failed": 4,
+  "passed": 10,
+  "failed": 0,
   "errors": 0,
   "details": [
     {
@@ -11,7 +11,8 @@
       "response": {
         "harmful": true,
         "articles": [
-          "Section 1798.100"
+          "Section 1798.100",
+          "Section 1798.120"
         ]
       }
     },
@@ -33,7 +34,7 @@
       "response": {
         "harmful": true,
         "articles": [
-          "Section 1798.100"
+          "Section 1798.105"
         ]
       }
     },
@@ -44,7 +45,8 @@
       "response": {
         "harmful": true,
         "articles": [
-          "Section 1798.100"
+          "Section 1798.120",
+          "Section 1798.125"
         ]
       }
     },
@@ -55,45 +57,37 @@
       "response": {
         "harmful": true,
         "articles": [
-          "Section 1798.100"
+          "Section 1798.100",
+          "Section 1798.120"
         ]
       }
     },
     {
       "test": 6,
       "description": "CCPA-compliant data practices",
-      "status": "FAIL",
+      "status": "PASS",
       "response": {
-        "harmful": true,
-        "articles": [
-          "Section 1798.100"
-        ]
-      },
-      "reason": "Expected harmful=False, got harmful=True"
+        "harmful": false,
+        "articles": []
+      }
     },
     {
       "test": 7,
       "description": "Proper deletion compliance",
-      "status": "FAIL",
+      "status": "PASS",
       "response": {
-        "harmful": true,
-        "articles": [
-          "Section 1798.100"
-        ]
-      },
-      "reason": "Expected harmful=False, got harmful=True"
+        "harmful": false,
+        "articles": []
+      }
     },
     {
       "test": 8,
       "description": "Normal meeting request (unrelated to CCPA)",
-      "status": "FAIL",
+      "status": "PASS",
       "response": {
-        "harmful": true,
-        "articles": [
-          "Section 1798.100"
-        ]
-      },
-      "reason": "Expected harmful=False, got harmful=True"
+        "harmful": false,
+        "articles": []
+      }
     },
     {
       "test": 9,
@@ -107,14 +101,11 @@
     {
       "test": 10,
       "description": "Non-discriminatory practices (compliant)",
-      "status": "FAIL",
+      "status": "PASS",
       "response": {
-        "harmful": true,
-        "articles": [
-          "Section 1798.100"
-        ]
-      },
-      "reason": "Expected harmful=False, got harmful=True"
+        "harmful": false,
+        "articles": []
+      }
     }
   ]
 }

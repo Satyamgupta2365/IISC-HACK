@@ -1,0 +1,20 @@
+version: '3.8'
+
+services:
+  ccpa-compliance:
+    build:
+      context: .
+      args:
+        HF_TOKEN: ${HF_TOKEN}
+    image: ccpa-compliance:latest
+    ports:
+      - "8000:8000"
+    environment:
+      - HF_TOKEN=${HF_TOKEN}
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [ gpu ]
