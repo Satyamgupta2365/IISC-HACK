@@ -35,7 +35,7 @@ def build_vector_store():
 
 def download_model():
     """Download LLM weights at build time so they are baked into the Docker image."""
-    model_id = os.environ.get("MODEL_ID", "mistralai/Mistral-7B-Instruct-v0.2")
+    model_id = os.environ.get("MODEL_ID", "Qwen/Qwen2.5-3B-Instruct")
     hf_token = os.environ.get("HF_TOKEN")
     
     print(f"Downloading model: {model_id}...")

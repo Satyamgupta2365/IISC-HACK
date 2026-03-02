@@ -26,18 +26,17 @@ COPY data/ccpa_statute.pdf data/
 COPY app/ app/
 COPY build_kb.py .
 
-# ---- Set default model (change to meta-llama/Meta-Llama-3-8B-Instruct if preferred) ----
-ENV MODEL_ID="mistralai/Mistral-7B-Instruct-v0.2"
+# ---- Set default model ----
+ENV MODEL_ID="Qwen/Qwen2.5-3B-Instruct"
 
 # ---- Accept HF token as build arg to download gated models ----
-ARG HF_TOKEN
+ARG HF_TOKEN=""
 ENV HF_TOKEN=${HF_TOKEN}
 
 # ---- Pre-download ALL weights at build time (critical hackathon requirement) ----
-# This bakes the embedding model, FAISS index, and LLM weights into the image
 RUN python build_kb.py
 
-# ---- HF_TOKEN will be re-injected at runtime via -e, clear the build-time value ----
+# ---- Clear the build-time token so it is NOT baked into final image ----
 ENV HF_TOKEN=""
 
 # ---- Expose FastAPI port ----

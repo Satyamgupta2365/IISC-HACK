@@ -139,7 +139,7 @@ class CCPAAnalyzer:
         )
         
         # Load Model
-        model_id = os.environ.get("MODEL_ID", "mistralai/Mistral-7B-Instruct-v0.3")
+        model_id = os.environ.get("MODEL_ID", "Qwen/Qwen2.5-3B-Instruct")
         hf_token = os.environ.get("HF_TOKEN")
         
         print(f"Loading {model_id} on {self.device}...")
