@@ -1,46 +1,66 @@
-# ---- Base image with CUDA support for GPU inference ----
-FROM nvidia/cuda:12.1.1-runtime-ubuntu22.04
+# ---- Multi‑stage Dockerfile for IISC‑HACK ----
+# Builder stage: install Python, dependencies, and pre‑download model weights
+FROM python:3.10-slim AS builder
 
-# Prevent interactive prompts during apt installs
-ENV DEBIAN_FRONTEND=noninteractive
-
-# Install Python 3.10 and system dependencies
+# Install system build tools
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    python3.10 \
-    python3-pip \
-    python3.10-venv \
     build-essential \
-    && ln -sf /usr/bin/python3.10 /usr/bin/python \
-    && ln -sf /usr/bin/pip3 /usr/bin/pip \
-    && rm -rf /var/lib/apt/lists/*
+    git \
+    curl && \
+    rm -rf /var/lib/apt/lists/*
 
+# Set working directory
 WORKDIR /app
 
-# ---- Install Python dependencies ----
+# Copy only requirements first for caching
 COPY requirements.txt .
+# Upgrade pip and install dependencies into /install
 RUN pip install --no-cache-dir --upgrade pip && \
-    pip install --no-cache-dir -r requirements.txt
+    pip install --no-cache-dir -r requirements.txt && \
+    mkdir -p /install && \
+    pip install --no-cache-dir -r requirements.txt -t /install
 
-# ---- Copy source code and data ----
-COPY data/ccpa_statute.pdf data/
-COPY app/ app/
+# Copy source code and data
+COPY app/ ./app/
+COPY data/ ./data/
 COPY build_kb.py .
 
-# ---- Set default model ----
-ENV MODEL_ID="Qwen/Qwen2.5-3B-Instruct"
-
-# ---- Accept HF token as build arg to download gated models ----
+# Build‑time argument for HuggingFace token (optional)
 ARG HF_TOKEN=""
 ENV HF_TOKEN=${HF_TOKEN}
-
-# ---- Pre-download ALL weights at build time (critical hackathon requirement) ----
+# Pre‑download model weights (uses the script which respects HF_TOKEN)
 RUN python build_kb.py
 
-# ---- Clear the build-time token so it is NOT baked into final image ----
+# Runtime stage: lightweight CUDA runtime
+FROM nvidia/cuda:12.1.1-runtime-ubuntu22.04
+
+# Create non‑root user
+ARG USERNAME=appuser
+ARG UID=1000
+ARG GID=1000
+RUN groupadd -g $GID $USERNAME && \
+    useradd -m -u $UID -g $GID -s /bin/bash $USERNAME
+
+# Set work directory
+WORKDIR /app
+
+# Copy installed Python packages from builder
+COPY --from=builder /install /usr/local/lib/python3.10/site-packages
+# Copy application code and data
+COPY --from=builder /app/app ./app
+COPY --from=builder /app/data ./data
+COPY --from=builder /app/build_kb.py .
+
+# Default model ID (can be overridden at runtime)
+ENV MODEL_ID="Qwen/Qwen2.5-3B-Instruct"
+# Ensure HF token is cleared
 ENV HF_TOKEN=""
 
-# ---- Expose FastAPI port ----
+# Expose FastAPI port
 EXPOSE 8000
 
-# ---- Start the server ----
+# Switch to non‑root user
+USER $USERNAME
+
+# Start the FastAPI server
 CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
